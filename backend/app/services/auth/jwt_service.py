@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any
 from app.models.user import User
 from app.config.app_config import app_settings
 from app.interfaces.jwt_interface import JWTServiceInterface
+from app.services.auth.token_blacklist_service import token_blacklist
 
 SECRET_KEY = app_settings.jwt_secret_key
 ALGORITHM = app_settings.jwt_algorithm
@@ -25,6 +26,9 @@ class JWTService(JWTServiceInterface):
     @staticmethod
     def verify_token(token: str) -> Optional[Dict[str, Any]]:
         try:
+            if token_blacklist.is_blacklisted(token):
+                return None
+            
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             return payload
         except jwt.PyJWTError:
@@ -34,4 +38,14 @@ class JWTService(JWTServiceInterface):
     def create_user_token(user: User) -> str:
         return JWTService.create_access_token(
             data={"sub": str(user.id), "email": user.email, "role": user.role}
-        ) 
+        )
+    
+    @staticmethod
+    def blacklist_token(token: str) -> None:
+        """Add token to blacklist"""
+        token_blacklist.add_to_blacklist(token)
+    
+    @staticmethod
+    def cleanup_expired_tokens() -> None:
+        """Clean up expired tokens from blacklist"""
+        token_blacklist.cleanup_expired_tokens() 

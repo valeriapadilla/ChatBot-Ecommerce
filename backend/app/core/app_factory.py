@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config.app_config import app_settings
 from app.core.logging_config import LoggingConfig
 from app.core.exception_handlers import ExceptionHandlers
-from app.api.routers import chat, auth
+from app.api.routers import chat, auth, products
 
 logger = logging.getLogger(__name__)
 
@@ -51,13 +51,13 @@ class AppFactory:
             allow_headers=app_settings.cors_headers,
         )
         
-        # Register exception handlers
+        from app.middleware.token_cleanup import TokenCleanupMiddleware
+        app.add_middleware(TokenCleanupMiddleware)
+        
         AppFactory._register_exception_handlers(app)
         
-        # Include routers
         AppFactory._include_routers(app)
         
-        # Add root endpoint
         AppFactory._add_root_endpoint(app)
         
         logger.info("FastAPI application created successfully")
@@ -80,6 +80,7 @@ class AppFactory:
         """Include API routers."""
         app.include_router(auth.router, prefix=app_settings.api_prefix)
         app.include_router(chat.router, prefix=app_settings.api_prefix)
+        app.include_router(products.router, prefix=app_settings.api_prefix)
         logger.info(f"Routers included with prefix: {app_settings.api_prefix}")
     
     @staticmethod
