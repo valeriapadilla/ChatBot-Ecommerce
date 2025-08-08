@@ -124,6 +124,3 @@ docker-compose up -d backend frontend
 - The backend and frontend can be developed locally or inside Docker containers as needed.
 
 ---
-
-## Contact
-For questions or support, contact [Your Name] at [your-email@example.com]. 
